@@ -1,8 +1,21 @@
 const { google } = require("googleapis");
 const puppeteer = require("puppeteer");
+require('dotenv').config();
+
 
 const auth = new google.auth.GoogleAuth({
-  keyFile: "./botcorreoseguimiento-9352db6f9e87.json",
+  credentials: {
+    type: "service_account",
+    project_id: process.env.GOOGLE_PROJECT_ID,
+    private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
+    private_key: process.env.GOOGLE_PRIVATE_KEY,
+    client_email: process.env.GOOGLE_CLIENT_EMAIL,
+    client_id: process.env.GOOGLE_CLIENT_ID,
+    auth_uri: process.env.GOOGLE_AUTH_URI,
+    token_uri: process.env.GOOGLE_TOKEN_URI,
+    auth_provider_x509_cert_url: process.env.GOOGLE_AUTH_PROVIDER_CERT_URL,
+    client_x509_cert_url: process.env.GOOGLE_CLIENT_CERT_URL,
+  },
   scopes: ["https://www.googleapis.com/auth/spreadsheets"],
 });
 
@@ -168,7 +181,7 @@ const updateStatusInExcelHandler = async (req, res) => {
     });
 
     const rows = response.data.values;
-    
+
     const headers = rows[0];
     const pedidos = rows.slice(1).map((row) => {
       const pedido = {};
@@ -177,18 +190,14 @@ const updateStatusInExcelHandler = async (req, res) => {
       });
       return pedido;
     });
-    
 
     const idIndex = headers.indexOf("ID Pedido");
     const statusIndex = headers.indexOf("Status");
 
     if (idIndex === -1 || statusIndex === -1) {
-      return res
-        .status(500)
-        .json({
-          error:
-            "No se encontró la columna 'ID Pedido' o 'Status' en el Excel.",
-        });
+      return res.status(500).json({
+        error: "No se encontró la columna 'ID Pedido' o 'Status' en el Excel.",
+      });
     }
 
     const updates = [];
