@@ -76,17 +76,7 @@ const consultarEnviosHandler = async (req, res) => {
 
     if (pedidosValidos.length > 0) {
       const browser = await puppeteer.launch({
-/*         executablePath:
-          "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", */
         headless: false,
-        args: [
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--disable-dev-shm-usage",
-          "--disable-gpu",
-          "--no-zygote",
-          "--single-process",
-        ],
       });
 
       const page = await browser.newPage();
