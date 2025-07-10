@@ -1,7 +1,6 @@
 const { google } = require("googleapis");
 const puppeteer = require("puppeteer");
-require('dotenv').config();
-
+require("dotenv").config();
 
 const auth = new google.auth.GoogleAuth({
   credentials: {
@@ -24,7 +23,6 @@ const SPREADSHEET_ID = "14KaaQ6iAWJQeN_-fLPaQdYh0_RTsvESuGzF5bgV9QWo";
 const HOJA_PEDIDOS = "PEDIDOS";
 
 console.log(process.env.GOOGLE_PRIVATE_KEY_ID, "en handler");
-
 
 const consultarEnviosHandler = async (req, res) => {
   try {
@@ -81,7 +79,14 @@ const consultarEnviosHandler = async (req, res) => {
 /*         executablePath:
           "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", */
         headless: false,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-gpu",
+          "--no-zygote",
+          "--single-process",
+        ],
       });
 
       const page = await browser.newPage();
