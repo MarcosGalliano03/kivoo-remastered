@@ -23,6 +23,9 @@ const sheets = google.sheets({ version: "v4", auth });
 const SPREADSHEET_ID = "14KaaQ6iAWJQeN_-fLPaQdYh0_RTsvESuGzF5bgV9QWo";
 const HOJA_PEDIDOS = "PEDIDOS";
 
+console.log(process.env.GOOGLE_PRIVATE_KEY_ID, "en handler");
+
+
 const consultarEnviosHandler = async (req, res) => {
   try {
     const response = await sheets.spreadsheets.values.get({
