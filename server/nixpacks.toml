@@ -1,0 +1,22 @@
+[phases.setup]
+nixPkgs = [
+  "fonts-liberation",
+  "libappindicator-gtk3",
+  "alsa-lib",
+  "atk",
+  "at-spi2-atk",
+  "mesa-libgbm",
+  "gtk3",
+  "nspr",
+  "nss",
+  "libx11",
+  "libXcomposite",
+  "libXcursor",
+  "libXdamage",
+  "libXfixes",
+  "libXi",
+  "libXrandr",
+  "libXScrnSaver",
+  "libXtst",
+  "xdg-utils"
+]
