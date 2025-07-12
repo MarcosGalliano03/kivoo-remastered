@@ -57,7 +57,6 @@ function App() {
 
       console.log(resultadosCompletos);
       console.log(noPagados);
-      
 
       setResultados(resultadosCompletos);
       setResultadosRestantes(
@@ -78,36 +77,42 @@ function App() {
     }
   };
 
-const handleStatusChange = (id, value) => {
-  const actualizarStatusEnArray = (array, setArray) => {
-    const nuevoArray = array.map((item) => {
-      const statusKey = item.STATUS !== undefined ? "STATUS" : item.Status !== undefined ? "Status" : "STATUS";
-      return item["ID Pedido"] === id ? { ...item, [statusKey]: value } : item;
-    });
-    setArray(nuevoArray);
+  const handleStatusChange = (id, value) => {
+    const actualizarStatusEnArray = (array, setArray) => {
+      const nuevoArray = array.map((item) => {
+        const statusKey =
+          item.STATUS !== undefined
+            ? "STATUS"
+            : item.Status !== undefined
+            ? "Status"
+            : "STATUS";
+        return item["ID Pedido"] === id
+          ? { ...item, [statusKey]: value }
+          : item;
+      });
+      setArray(nuevoArray);
+    };
+
+    let encontrado = false;
+
+    if (resultados.some((item) => item["ID Pedido"] === id)) {
+      actualizarStatusEnArray(resultados, setResultados);
+      encontrado = true;
+    } else if (filtradosNoPagados.some((item) => item["ID Pedido"] === id)) {
+      actualizarStatusEnArray(filtradosNoPagados, setFiltradosNoPagados);
+      encontrado = true;
+    } else if (enDistribuidor.some((item) => item["ID Pedido"] === id)) {
+      actualizarStatusEnArray(enDistribuidor, setEnDistribuidor);
+      encontrado = true;
+    }
+
+    if (encontrado) {
+      setStatusActualizados((prev) => {
+        const sinDuplicados = prev.filter((p) => p["ID Pedido"] !== id);
+        return [...sinDuplicados, { "ID Pedido": id, STATUS: value }]; // Siempre guardamos en mayúsculas para enviar al backend
+      });
+    }
   };
-
-  let encontrado = false;
-
-  if (resultados.some((item) => item["ID Pedido"] === id)) {
-    actualizarStatusEnArray(resultados, setResultados);
-    encontrado = true;
-  } else if (filtradosNoPagados.some((item) => item["ID Pedido"] === id)) {
-    actualizarStatusEnArray(filtradosNoPagados, setFiltradosNoPagados);
-    encontrado = true;
-  } else if (enDistribuidor.some((item) => item["ID Pedido"] === id)) {
-    actualizarStatusEnArray(enDistribuidor, setEnDistribuidor);
-    encontrado = true;
-  }
-
-  if (encontrado) {
-    setStatusActualizados((prev) => {
-      const sinDuplicados = prev.filter((p) => p["ID Pedido"] !== id);
-      return [...sinDuplicados, { "ID Pedido": id, STATUS: value }]; // Siempre guardamos en mayúsculas para enviar al backend
-    });
-  }
-};
-
 
   const actualizarStatusEnExcel = async () => {
     if (statusActualizados.length === 0)
@@ -240,7 +245,10 @@ const handleStatusChange = (id, value) => {
         >
           {loading ? "Cargando..." : "Consultar pedidos"}
         </button>
-        <button onClick={() => actualizarStatusEnExcel()} disabled={resultados.length < 1 || loading2}>
+        <button
+          onClick={() => actualizarStatusEnExcel()}
+          disabled={resultados.length < 1 || loading2}
+        >
           {loading2 ? "Cargando..." : "Actualizar status en Excel"}
         </button>
       </div>
