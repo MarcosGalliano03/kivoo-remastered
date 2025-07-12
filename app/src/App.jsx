@@ -24,7 +24,7 @@ function App() {
 
     try {
       const response = await fetch(
-        "http://localhost:3001/api/excel/consultar-envios",
+        "https://29319aeb8f98.ngrok-free.app/api/excel/consultar-envios",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -116,7 +116,7 @@ const handleStatusChange = (id, value) => {
     try {
       setLoading2(true);
       const response = await fetch(
-        "http://localhost:3001/api/excel/update-status",
+        "https://29319aeb8f98.ngrok-free.app/api/excel/update-status",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
