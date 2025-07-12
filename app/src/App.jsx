@@ -236,7 +236,7 @@ function App() {
   };
 
   return (
-    <div style={{ padding: "2rem" }} className="AppDiv">
+    <div className="AppDiv">
       <h1>Lectura y Filtro de Excel</h1>
       <div className="mainActionsDiv">
         <button

@@ -1,0 +1,57 @@
+.tabla-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.tabla-pedidos {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 800px;
+    /* en desktop, tabla normal */
+}
+
+/* Estilos de tabla normal (desktop) */
+.tabla-pedidos th,
+.tabla-pedidos td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+    white-space: nowrap;
+}
+
+/* Mobile: convertir a tarjetas */
+@media (max-width: 768px) {
+    .tabla-pedidos thead {
+        display: none;
+        /* ocultamos los headers */
+    }
+
+    .tabla-pedidos tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 10px;
+        width: 40%;
+    }
+
+    .tabla-pedidos td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: none;
+        padding: 8px 0;
+        white-space: normal;
+    }
+
+    .tabla-pedidos td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        flex: 0 0 17%;
+    }
+
+    .tabla-pedidos textarea {
+        width: 24%;
+        height: 80px;
+    }
+}
