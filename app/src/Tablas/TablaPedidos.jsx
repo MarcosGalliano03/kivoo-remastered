@@ -103,9 +103,11 @@ Por favor realizá la transferencia:
 
 📌 *Si transferís desde una cuenta bancaria* (Santander, Galicia, Cuenta DNI, etc):  
 👉🏻 *CVU:* 0720126088000003241736
+👉🏻  *Alias*: juanescobar9
 
 📌 *Si transferís desde Mercado Pago*:  
 👉🏻 *CVU:* 3840200500000002756437
+👉🏻  *Alias*: NADA.PORTE.VOCERO
 
 💵 El importe total es de *$${pedido.Monto}*  
 *Después enviame el comprobante por favor 🧾*`
@@ -120,9 +122,11 @@ Cuando lo tengas, por favor realizá la transferencia:
 
 📌 *Si transferís desde una cuenta bancaria* (Santander, Galicia, Cuenta DNI, etc):  
 👉🏻 *CVU:* 0720126088000003241736
+👉🏻  *Alias*: juanescobar9
 
 📌 *Si transferís desde Mercado Pago*:  
 👉🏻 *CVU:* 3840200500000002756437
+👉🏻  *Alias*: NADA.PORTE.VOCERO
 
 💵 El importe total es de *$${pedido.Monto}*  
 *Por favor recordá que al chico de Correo Argentino no hay que pagarle nada*`
