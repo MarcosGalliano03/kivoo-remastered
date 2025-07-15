@@ -42,6 +42,17 @@ textarea {
   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
 }
 
+.mainActionsDiv p {
+  color: rgb(255, 55, 0);
+  animation: fadeOpacity 1s infinite;
+}
+
+@keyframes fadeOpacity {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
 @media (max-width: 768px) {
   .buttons-container {
     display: flex;
