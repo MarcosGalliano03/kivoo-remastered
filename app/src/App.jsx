@@ -8,7 +8,7 @@ import { saveAs } from "file-saver";
 function App() {
   const [excelData, setExcelData] = useState([]);
   const [filtrados, setFiltrados] = useState([]);
-  const [resultados, setResultados] = useState([]); // ← NUEVO estado para lo que devuelve el backend
+  const [resultados, setResultados] = useState([]);
   const [filtradosNoPagados, setFiltradosNoPagados] = useState([]);
   const [verSeguimientos, setVerSeguimientos] = useState(false);
   const [enDistribuidor, setEnDistribuidor] = useState([]);
@@ -18,6 +18,47 @@ function App() {
   const [atendidos, setAtendidos] = useState({});
   const [resultadosRestantes, setResultadosRestantes] = useState([]);
   const [statusActualizados, setStatusActualizados] = useState([]);
+  const [isLocal, setIsLocal] = useState(true);
+
+  useEffect(() => {
+    // Solo cargar desde localStorage si los estados están vacíos
+    if (
+      !resultados?.length &&
+      !resultadosRestantes?.length &&
+      !enDistribuidor?.length &&
+      !filtradosNoPagados?.length &&
+      !perdidos?.length
+    ) {
+      const resultadosGuardados = localStorage.getItem("resultados");
+      const resultadosRestantesGuardados = localStorage.getItem(
+        "resultadosRestantes"
+      );
+      const enDistribuidorGuardados = localStorage.getItem("enDistribuidor");
+      const filtradosNoPagadosGuardados =
+        localStorage.getItem("filtradosNoPagados");
+      const perdidosGuardados = localStorage.getItem("perdidos");
+
+      if (resultadosGuardados) {
+        setResultados(JSON.parse(resultadosGuardados));
+      }
+
+      if (resultadosRestantesGuardados) {
+        setResultadosRestantes(JSON.parse(resultadosRestantesGuardados));
+      }
+
+      if (enDistribuidorGuardados) {
+        setEnDistribuidor(JSON.parse(enDistribuidorGuardados));
+      }
+
+      if (filtradosNoPagadosGuardados) {
+        setFiltradosNoPagados(JSON.parse(filtradosNoPagadosGuardados));
+      }
+
+      if (perdidosGuardados) {
+        setPerdidos(JSON.parse(perdidosGuardados));
+      }
+    }
+  }, []);
 
   const enviarPedidos = async () => {
     setLoading(true);
@@ -35,6 +76,7 @@ function App() {
       if (!response.ok) throw new Error("Error en la consulta");
 
       const data = await response.json();
+      setIsLocal(false)
 
       const { consultados, perdidos, noPagados } = data;
 
@@ -55,10 +97,9 @@ function App() {
           item["Estado actual"] === "EN ESPERA EN SUCURSAL"
       );
 
-      console.log(resultadosCompletos);
-      console.log(noPagados);
-
       setResultados(resultadosCompletos);
+      localStorage.setItem("resultados", JSON.stringify(resultadosCompletos));
+
       setResultadosRestantes(
         sinDistribuidor.filter(
           (item) =>
@@ -67,9 +108,26 @@ function App() {
             item["Estado actual"] !== "EN ESPERA EN SUCURSAL"
         )
       );
+      localStorage.setItem(
+        "resultadosRestantes",
+        JSON.stringify(
+          sinDistribuidor.filter(
+            (item) =>
+              item["Estado actual"] !== "ENTREGA EN SUCURSAL" &&
+              item["Estado actual"] !== "ENTREGADO" &&
+              item["Estado actual"] !== "EN ESPERA EN SUCURSAL"
+          )
+        )
+      );
+
       setEnDistribuidor(distribuidor);
+      localStorage.setItem("enDistribuidor", JSON.stringify(distribuidor));
+
       setFiltradosNoPagados(noPagados);
+      localStorage.setItem("filtradosNoPagados", JSON.stringify(noPagados));
+
       setPerdidos(perdidos);
+      localStorage.setItem("perdidos", JSON.stringify(perdidos));
     } catch (error) {
       console.error("Fallo al consultar:", error);
     } finally {
@@ -239,10 +297,7 @@ function App() {
     <div className="AppDiv">
       <h1>Lectura y Filtro de Excel</h1>
       <div className="mainActionsDiv">
-        <button
-          onClick={() => enviarPedidos(filtrados)}
-          disabled={resultados.length > 0 || loading}
-        >
+        <button onClick={() => enviarPedidos(filtrados)} disabled={loading}>
           {loading ? "Cargando..." : "Consultar pedidos"}
         </button>
         <button
@@ -251,6 +306,7 @@ function App() {
         >
           {loading2 ? "Cargando..." : "Actualizar status en Excel"}
         </button>
+        {isLocal ? <p>Modo local activado</p> : ""}
       </div>
 
       <div className="buttons-container">
@@ -369,4 +425,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
