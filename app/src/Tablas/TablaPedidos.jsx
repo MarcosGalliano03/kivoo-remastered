@@ -107,7 +107,7 @@ Por favor realizá la transferencia:
 
 📌 *Si transferís desde Mercado Pago*:  
 👉🏻 *CVU:* 3840200500000002756437
-👉🏻  *Alias*: NADA.PORTE.VOCERO
+👉🏻  *Alias*: mariana.soria1969
 
 💵 El importe total es de *$${pedido.Monto}*  
 *Después enviame el comprobante por favor 🧾*`
@@ -126,7 +126,7 @@ Cuando lo tengas, por favor realizá la transferencia:
 
 📌 *Si transferís desde Mercado Pago*:  
 👉🏻 *CVU:* 3840200500000002756437
-👉🏻  *Alias*: NADA.PORTE.VOCERO
+👉🏻  *Alias*: mariana.soria1969
 
 💵 El importe total es de *$${pedido.Monto}*  
 *Por favor recordá que al chico de Correo Argentino no hay que pagarle nada*`
