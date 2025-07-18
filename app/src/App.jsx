@@ -60,12 +60,39 @@ function App() {
     }
   }, []);
 
+  const enviarARetornados = async (retornados) => {
+    if (!retornados || retornados.length === 0) return;
+
+    // Solo mandamos ID, Nombre y Código
+    const datosFiltrados = retornados.map((pedido) => ({
+      "ID de pedido": pedido["ID Pedido"],
+      "Nombre del cliente": pedido["Cliente"],
+      "Código de seguimiento": pedido["TN"],
+    }));
+
+    try {
+      const response = await fetch(
+        "http://localhost:3001/api/excel/update-retornados",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(datosFiltrados),
+        }
+      );
+
+      const data = await response.json();
+      console.log("✔️ Agregados a retornados:", data);
+    } catch (error) {
+      console.error("❌ Error al enviar a retornados:", error);
+    }
+  };
+
   const enviarPedidos = async () => {
     setLoading(true);
 
     try {
       const response = await fetch(
-        "https://62260101a521.ngrok-free.app/api/excel/consultar-envios",
+        "http://localhost:3001/api/excel/consultar-envios",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -76,7 +103,7 @@ function App() {
       if (!response.ok) throw new Error("Error en la consulta");
 
       const data = await response.json();
-      setIsLocal(false)
+      setIsLocal(false);
 
       const { consultados, perdidos, noPagados } = data;
 
@@ -128,6 +155,13 @@ function App() {
 
       setPerdidos(perdidos);
       localStorage.setItem("perdidos", JSON.stringify(perdidos));
+
+      const retornados = sinDistribuidor.filter((item) => {
+        const estado = item["Estado actual"]?.toUpperCase();
+        return estado === "RETORNANDO" || estado === "RETORNAND0";
+      });
+
+      enviarARetornados(retornados);
     } catch (error) {
       console.error("Fallo al consultar:", error);
     } finally {
@@ -179,7 +213,7 @@ function App() {
     try {
       setLoading2(true);
       const response = await fetch(
-        "https://62260101a521.ngrok-free.app/api/excel/update-status",
+        "http://localhost:3001/api/excel/update-status",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

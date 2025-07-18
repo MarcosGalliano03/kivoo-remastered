@@ -151,7 +151,7 @@ Cuando lo tengas, por favor realizá la transferencia:
                       : {}
                   }
                 >
-                  <td data-label="Atendido">
+                  <td data-label="Atendido" onClick={() => handleCheck(pedido["ID Pedido"])}>
                     <input
                       type="checkbox"
                       checked={!!atendidos[pedido["ID Pedido"]]}

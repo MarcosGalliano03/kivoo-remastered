@@ -22,8 +22,6 @@ const sheets = google.sheets({ version: "v4", auth });
 const SPREADSHEET_ID = "14KaaQ6iAWJQeN_-fLPaQdYh0_RTsvESuGzF5bgV9QWo";
 const HOJA_PEDIDOS = "PEDIDOS";
 
-console.log(process.env.GOOGLE_PRIVATE_KEY_ID, "en handler");
-
 const consultarEnviosHandler = async (req, res) => {
   try {
     const response = await sheets.spreadsheets.values.get({
@@ -261,7 +259,63 @@ const updateStatusInExcelHandler = async (req, res) => {
   }
 };
 
-// Helper para convertir número de columna a letra (ej: 1 => A, 2 => B, etc.)
+const updateRetornados = async (req, res) => {
+  const nuevosPedidos = req.body; // [{ ID de pedido, Nombre del cliente, Código de seguimiento }]
+
+  if (!Array.isArray(nuevosPedidos) || nuevosPedidos.length === 0) {
+    return res.status(400).json({ error: "Debes enviar un array de pedidos." });
+  }
+
+  try {
+    // 1. Leer la hoja RETORNADOS
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `RETORNADOS!A1:E1000`,
+    });
+
+    const rows = response.data.values;
+    const headers = rows[0] || [];
+    const data = rows.slice(1);
+
+    const existingIds = new Set(data.map(row => row[0]?.trim()));
+
+    // 2. Filtrar los que ya existen
+    const nuevosSinRepetidos = nuevosPedidos.filter(p => !existingIds.has(p["ID de pedido"]));
+
+    if (nuevosSinRepetidos.length === 0) {
+      return res.json({ mensaje: "No hay pedidos nuevos para agregar." });
+    }
+
+    // 3. Crear nuevas filas con los datos que mandaste y columnas vacías al final
+    const nuevasFilas = nuevosSinRepetidos.map(pedido => [
+      pedido["ID de pedido"],
+      pedido["Nombre del cliente"],
+      pedido["Código de seguimiento"],
+      "", // Motivo
+      ""  // VUELVE A
+    ]);
+
+    // 4. Agregar al Excel
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `RETORNADOS!A1:E1`,
+      valueInputOption: "RAW",
+      insertDataOption: "INSERT_ROWS",
+      requestBody: { values: nuevasFilas },
+    });
+
+    res.json({
+      agregados: nuevosSinRepetidos.map(p => p["ID de pedido"]),
+      omitidos: nuevosPedidos
+        .filter(p => existingIds.has(p["ID de pedido"]))
+        .map(p => p["ID de pedido"]),
+    });
+  } catch (error) {
+    console.error("❌ Error al actualizar RETORNADOS:", error.message);
+    res.status(500).json({ error: "Error al actualizar hoja RETORNADOS" });
+  }
+};
+
 const colNumberToLetter = (num) => {
   let str = "";
   while (num > 0) {
@@ -275,4 +329,5 @@ const colNumberToLetter = (num) => {
 module.exports = {
   consultarEnviosHandler,
   updateStatusInExcelHandler,
+  updateRetornados
 };
