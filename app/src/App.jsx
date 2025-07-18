@@ -72,7 +72,7 @@ function App() {
 
     try {
       const response = await fetch(
-        "http://localhost:3001/api/excel/update-retornados",
+        "https://f55a13b25b36.ngrok-free.app/api/excel/update-retornados",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -92,7 +92,7 @@ function App() {
 
     try {
       const response = await fetch(
-        "http://localhost:3001/api/excel/consultar-envios",
+        "https://f55a13b25b36.ngrok-free.app/api/excel/consultar-envios",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -213,7 +213,7 @@ function App() {
     try {
       setLoading2(true);
       const response = await fetch(
-        "http://localhost:3001/api/excel/update-status",
+        "https://f55a13b25b36.ngrok-free.app/api/excel/update-status",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
