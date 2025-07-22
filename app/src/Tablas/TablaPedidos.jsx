@@ -105,9 +105,10 @@ Por favor realizá la transferencia:
 👉🏻 *CVU:* 0720126088000003241736
 👉🏻  *Alias*: juanescobar9
 
-📌 *Si transferís desde Mercado Pago*:  
-👉🏻 *CVU:* 3840200500000002756437
-👉🏻  *Alias*: mariana.soria1969
+📌 *Si transferís desde Mercado Pago* :  
+👉🏻 *CVU:* 0340290208290120476005
+👉🏻 *Alias*: kivoo.patagonia
+👉🏻 *Titular*: Leonardo Gabriel
 
 💵 El importe total es de *$${pedido.Monto}*  
 *Después enviame el comprobante por favor 🧾*`
@@ -125,8 +126,9 @@ Cuando lo tengas, por favor realizá la transferencia:
 👉🏻  *Alias*: juanescobar9
 
 📌 *Si transferís desde Mercado Pago*:  
-👉🏻 *CVU:* 3840200500000002756437
-👉🏻  *Alias*: mariana.soria1969
+👉🏻 *CVU:* 0340290208290120476005
+👉🏻 *Alias*: kivoo.patagonia
+👉🏻 *Titular*: Leonardo Gabriel
 
 💵 El importe total es de *$${pedido.Monto}*  
 *Por favor recordá que al chico de Correo Argentino no hay que pagarle nada*`
