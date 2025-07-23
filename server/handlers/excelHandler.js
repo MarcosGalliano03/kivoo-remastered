@@ -1,5 +1,6 @@
 const { google } = require("googleapis");
 const puppeteer = require("puppeteer");
+const { head } = require("../routes");
 require("dotenv").config();
 
 const auth = new google.auth.GoogleAuth({
@@ -141,6 +142,7 @@ const consultarEnviosHandler = async (req, res) => {
               fechaDeEstado: datos.fechaHora,
               Whatsapp: pedido.Whatsapp,
               STATUS: pedido.Status,
+              IMPORTANCIA: pedido.Importancia
             });
           }
         } catch (error) {
@@ -163,7 +165,7 @@ const consultarEnviosHandler = async (req, res) => {
 };
 
 const updateStatusInExcelHandler = async (req, res) => {
-  const pedidosParaActualizar = req.body; // [{ "ID Pedido": "1182", "STATUS": "Nuevo status" }, ...]
+  const pedidosParaActualizar = req.body; // [{ "ID Pedido": "1182", "STATUS": "Nuevo status", "IMPORTANCIA": "Alta" }, ...]
 
   if (
     !Array.isArray(pedidosParaActualizar) ||
@@ -180,7 +182,6 @@ const updateStatusInExcelHandler = async (req, res) => {
     });
 
     const rows = response.data.values;
-
     const headers = rows[0];
     const pedidos = rows.slice(1).map((row) => {
       const pedido = {};
@@ -192,10 +193,11 @@ const updateStatusInExcelHandler = async (req, res) => {
 
     const idIndex = headers.indexOf("ID Pedido");
     const statusIndex = headers.indexOf("Status");
+    const importanciaIndex = headers.indexOf("Importancia");
 
-    if (idIndex === -1 || statusIndex === -1) {
+    if (idIndex === -1 || statusIndex === -1 || importanciaIndex === -1) {
       return res.status(500).json({
-        error: "No se encontró la columna 'ID Pedido' o 'Status' en el Excel.",
+        error: "No se encontró la columna 'ID Pedido', 'Status' o 'Importancia' en el Excel.",
       });
     }
 
@@ -212,32 +214,47 @@ const updateStatusInExcelHandler = async (req, res) => {
         return;
       }
 
-      const rowNumber = pedidoExcelIndex + 2; // +2 porque el array empieza en 0 y hay encabezado
+      const rowNumber = pedidoExcelIndex + 2; // +2 por encabezado y base cero
       const statusActual = pedidos[pedidoExcelIndex]["Status"] || "";
       const statusNuevo = pedidoReq["STATUS"] || "";
 
-      if (statusNuevo === statusActual) {
-        noUpdates.push({ ...pedidoReq, motivo: "Status idéntico al actual" });
-        return;
-      }
+      const importanciaActual = pedidos[pedidoExcelIndex]["Importancia"] || "";
+      const importanciaNueva = pedidoReq["IMPORTANCIA"] || "";
 
-      if (statusNuevo === "" && statusActual !== "") {
+      // STATUS: Verificar si hay que actualizar
+      if (
+        statusNuevo === statusActual ||
+        (statusNuevo === "" && statusActual !== "")
+      ) {
         noUpdates.push({
           ...pedidoReq,
-          motivo: "Status vacío, pero ya existe uno en Excel",
+          motivo:
+            statusNuevo === statusActual
+              ? "Status idéntico al actual"
+              : "Status vacío, pero ya existe uno en Excel",
         });
-        return;
+      } else {
+        updates.push({
+          range: `${HOJA_PEDIDOS}!${colNumberToLetter(statusIndex + 1)}${rowNumber}`,
+          values: [[statusNuevo]],
+          id: pedidoReq["ID Pedido"],
+        });
       }
 
-      updates.push({
-        range: `${HOJA_PEDIDOS}!${colNumberToLetter(
-          statusIndex + 1
-        )}${rowNumber}`,
-        values: [[statusNuevo]],
-        id: pedidoReq["ID Pedido"],
-      });
+      // IMPORTANCIA: Verificar si hay que actualizar
+      if (
+        importanciaNueva !== "" &&
+        importanciaNueva !== importanciaActual
+      ) {
+        updates.push({
+          range: `${HOJA_PEDIDOS}!${colNumberToLetter(importanciaIndex + 1)}${rowNumber}`,
+          values: [[importanciaNueva]],
+          id: pedidoReq["ID Pedido"],
+        });
+      }
     });
 
+    // Aplicar todos los updates
     const batchUpdateRequests = updates.map((u) =>
       sheets.spreadsheets.values.update({
         spreadsheetId: SPREADSHEET_ID,
@@ -250,14 +267,15 @@ const updateStatusInExcelHandler = async (req, res) => {
     await Promise.all(batchUpdateRequests);
 
     res.json({
-      actualizados: updates.map((u) => u.id),
+      actualizados: [...new Set(updates.map((u) => u.id))],
       noActualizados: noUpdates,
     });
   } catch (error) {
-    console.error("❌ Error actualizando status:", error.message);
-    res.status(500).json({ error: "Error actualizando status" });
+    console.error("❌ Error actualizando status e importancia:", error.message);
+    res.status(500).json({ error: "Error actualizando status e importancia" });
   }
 };
+
 
 const updateRetornados = async (req, res) => {
   const nuevosPedidos = req.body; // [{ ID de pedido, Nombre del cliente, Código de seguimiento }]

@@ -55,3 +55,33 @@
         height: 80px;
     }
 }
+
+/*  modal  */
+.modal{
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgb(66, 66, 66);
+    border-radius: 5px;
+    overflow: auto;
+    max-height: 700px;
+}
+
+.modal button{
+    width: 40%;
+    padding: 0px;
+}
+
+.modal-contenido{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 10px 25px;
+}
+
+.pedido-detalles{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+}

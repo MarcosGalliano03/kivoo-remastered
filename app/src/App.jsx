@@ -123,8 +123,28 @@ function App() {
           item["Estado actual"] === "ENTREGADO" ||
           item["Estado actual"] === "EN ESPERA EN SUCURSAL"
       );
+      const importanciaOrden = { Importante: 1, Moderado: 2, Bajo: 3 };
+
+      // Normalizar IMPORTANCIA
+      resultadosCompletos.forEach((p) => {
+        const raw = (p.IMPORTANCIA || p.Importancia || "").toLowerCase().trim();
+        if (raw.includes("importante")) {
+          p.Importancia = "Importante";
+        } else if (raw.includes("moderad")) {
+          p.Importancia = "Moderado";
+        } else {
+          p.Importancia = "Bajo";
+        }
+      });
+
+      resultadosCompletos.sort((a, b) => {
+        const impA = a.Importancia || "Bajo";
+        const impB = b.Importancia || "Bajo";
+        return (importanciaOrden[impA] || 4) - (importanciaOrden[impB] || 4);
+      });
 
       setResultados(resultadosCompletos);
+
       localStorage.setItem("resultados", JSON.stringify(resultadosCompletos));
 
       setResultadosRestantes(
@@ -150,6 +170,29 @@ function App() {
       setEnDistribuidor(distribuidor);
       localStorage.setItem("enDistribuidor", JSON.stringify(distribuidor));
 
+      const importanciaOrdenNoPagados = { Importante: 1, Moderado: 2, Bajo: 3 };
+
+      noPagados.forEach((p) => {
+        const raw = (p.IMPORTANCIA || p.Importancia || "").toLowerCase().trim();
+        if (raw.includes("importante")) {
+          p.Importancia = "Importante";
+        } else if (raw.includes("moderad")) {
+          p.Importancia = "Moderado";
+        } else {
+          p.Importancia = "Bajo";
+        }
+      });
+
+      noPagados.sort((a, b) => {
+        const impA = a.Importancia || "Bajo";
+        const impB = b.Importancia || "Bajo";
+
+        return (
+          (importanciaOrdenNoPagados[impA] || 4) -
+          (importanciaOrdenNoPagados[impB] || 4)
+        );
+      });
+
       setFiltradosNoPagados(noPagados);
       localStorage.setItem("filtradosNoPagados", JSON.stringify(noPagados));
 
@@ -169,39 +212,69 @@ function App() {
     }
   };
 
-  const handleStatusChange = (id, value) => {
-    const actualizarStatusEnArray = (array, setArray) => {
+  const handleStatusChange = ({
+    id,
+    nuevoStatus = null,
+    nuevaImportancia = null,
+  }) => {
+    console.log("CAMBIO DE IMPORTANCIA =>", id, nuevaImportancia);
+
+    const actualizarEnArray = (array, setArray) => {
       const nuevoArray = array.map((item) => {
+        if (item["ID Pedido"] !== id) return item;
+
         const statusKey =
           item.STATUS !== undefined
             ? "STATUS"
             : item.Status !== undefined
             ? "Status"
             : "STATUS";
-        return item["ID Pedido"] === id
-          ? { ...item, [statusKey]: value }
-          : item;
+
+        const importanciaKey =
+          item.IMPORTANCIA !== undefined
+            ? "IMPORTANCIA"
+            : item.Importancia !== undefined
+            ? "Importancia"
+            : "IMPORTANCIA";
+        return {
+          ...item,
+          ...(nuevoStatus !== null && { [statusKey]: nuevoStatus }),
+          ...(nuevaImportancia !== null && {
+            [importanciaKey]: nuevaImportancia,
+          }),
+        };
       });
+
       setArray(nuevoArray);
     };
 
     let encontrado = false;
 
     if (resultados.some((item) => item["ID Pedido"] === id)) {
-      actualizarStatusEnArray(resultados, setResultados);
+      actualizarEnArray(resultados, setResultados);
       encontrado = true;
     } else if (filtradosNoPagados.some((item) => item["ID Pedido"] === id)) {
-      actualizarStatusEnArray(filtradosNoPagados, setFiltradosNoPagados);
+      actualizarEnArray(filtradosNoPagados, setFiltradosNoPagados);
       encontrado = true;
     } else if (enDistribuidor.some((item) => item["ID Pedido"] === id)) {
-      actualizarStatusEnArray(enDistribuidor, setEnDistribuidor);
+      actualizarEnArray(enDistribuidor, setEnDistribuidor);
       encontrado = true;
     }
 
     if (encontrado) {
       setStatusActualizados((prev) => {
         const sinDuplicados = prev.filter((p) => p["ID Pedido"] !== id);
-        return [...sinDuplicados, { "ID Pedido": id, STATUS: value }]; // Siempre guardamos en mayúsculas para enviar al backend
+        const anterior = prev.find((p) => p["ID Pedido"] === id) || {};
+
+        return [
+          ...sinDuplicados,
+          {
+            ...anterior, // primero lo viejo
+            "ID Pedido": id,
+            ...(nuevoStatus !== null && { STATUS: nuevoStatus }),
+            ...(nuevaImportancia !== null && { IMPORTANCIA: nuevaImportancia }),
+          },
+        ];
       });
     }
   };

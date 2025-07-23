@@ -1,5 +1,6 @@
 import React from "react";
 import "./tablas.css";
+import { useState } from "react";
 
 const TablaPedidos = ({
   pedidos,
@@ -10,6 +11,9 @@ const TablaPedidos = ({
   exportar,
   handleTextChange: handleStatusChange,
 }) => {
+  const [display, setDisplay] = useState(false);
+  const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
+
   const calcularDiasDesde = (fechaTexto) => {
     if (!fechaTexto) return null;
 
@@ -84,6 +88,9 @@ const TablaPedidos = ({
               </th>
               <th>Whatsapp</th>
               <th>Status</th>
+              {tipo === "seguimientos" || tipo === "no_pagados" ? (
+                <th>Importancia</th>
+              ) : null}
               <th>Acción</th>
             </tr>
           </thead>
@@ -153,7 +160,10 @@ Cuando lo tengas, por favor realizá la transferencia:
                       : {}
                   }
                 >
-                  <td data-label="Atendido" onClick={() => handleCheck(pedido["ID Pedido"])}>
+                  <td
+                    data-label="Atendido"
+                    onClick={() => handleCheck(pedido["ID Pedido"])}
+                  >
                     <input
                       type="checkbox"
                       checked={!!atendidos[pedido["ID Pedido"]]}
@@ -214,18 +224,74 @@ Cuando lo tengas, por favor realizá la transferencia:
                         tipo === "no_pagados" ? pedido.Status : pedido.STATUS
                       }
                       onChange={(e) =>
-                        handleStatusChange(pedido["ID Pedido"], e.target.value)
+                        handleStatusChange({
+                          id: pedido["ID Pedido"],
+                          nuevoStatus: e.target.value,
+                        })
                       }
                     />
+                  </td>
+                  <td data-label="Importancia">
+                    {tipo === "seguimientos" || tipo === "no_pagados"
+                      ? (() => {
+                          const importanciaValue = (
+                            pedido.IMPORTANCIA ||
+                            pedido.Importancia ||
+                            ""
+                          ).trim();
+                          let borderColor = "orange";
+                          if (importanciaValue === "Importante")
+                            borderColor = "red";
+                          else if (importanciaValue === "Bajo")
+                            borderColor = "green";
+                          else if (importanciaValue === "Moderado")
+                            borderColor = "orange";
+                          return (
+                            <select
+                              value={
+                                ["Bajo", "Moderado", "Importante"].includes(
+                                  importanciaValue
+                                )
+                                  ? importanciaValue
+                                  : "Moderado"
+                              }
+                              onChange={(e) => {
+                                const id = pedido["ID Pedido"]
+                                  ?.toString()
+                                  .trim();
+                                const nueva = e.target.value;
+
+                                handleStatusChange({
+                                  id: pedido["ID Pedido"],
+                                  nuevaImportancia: e.target.value,
+                                });
+                              }}
+                              style={{
+                                border: `2px solid ${borderColor}`,
+                                borderRadius: "4px",
+                              }}
+                            >
+                              <option value="Importante">Importante</option>
+                              <option value="Moderado">Moderado</option>
+                              <option value="Bajo">Bajo</option>
+                            </select>
+                          );
+                        })()
+                      : null}
                   </td>
                   <td data-label="Acción">
                     {urlWhatsapp ? (
                       <a href={urlWhatsapp} target="_blank" rel="noreferrer">
-                        <button>Enviar mensaje</button>
+                        <button>
+                          <ion-icon name="send"></ion-icon>
+                        </button>
                       </a>
                     ) : (
                       "-"
                     )}
+                    <button onClick={() => setPedidoSeleccionado(pedido)}>
+                      <ion-icon name="information-circle-outline"></ion-icon>
+                    </button>
                   </td>
                 </tr>
               );
@@ -233,6 +299,43 @@ Cuando lo tengas, por favor realizá la transferencia:
           </tbody>
         </table>
       </div>
+      {pedidoSeleccionado && (
+        <div className="modal">
+          <div className="modal-contenido">
+            <h2>Información del pedido</h2>
+            <button onClick={() => setPedidoSeleccionado(null)}>Cerrar</button>
+            <div className="pedido-detalles">
+              {Object.entries(pedidoSeleccionado)
+                .filter(([clave]) =>
+                  [
+                    "Cliente",
+                    "Monto",
+                    "Tipo de Envío",
+                    "Estado Correo",
+                    "¿Pagado?",
+                    "Estado del Cliente",
+                    "Importancia",
+                    "DNI",
+                    "Observaciones",
+                    "Codigos de seguimiento",
+                    "LINK FINAL CORREO",
+                    "UNIDADES",
+                    "Status",
+                    "Whatsapp",
+                    "Producto",
+                    "COGS",
+                    "Costo Envío",
+                  ].includes(clave)
+                )
+                .map(([clave, valor]) => (
+                  <div key={clave}>
+                    <strong>{clave}:</strong> {String(valor || "-")}
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
