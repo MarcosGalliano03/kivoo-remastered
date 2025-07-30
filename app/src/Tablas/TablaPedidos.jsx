@@ -173,7 +173,7 @@ Cuando lo tengas, por favor realizá la transferencia:
                   <td data-label="ID Pedido">{pedido["ID Pedido"]}</td>
                   <td data-label="Cliente">{pedido.Cliente}</td>
                   <td data-label="Monto">${pedido.Monto}</td>
-                  <td data-label="Códigos de seguimiento">{pedido.TN}</td>
+                  <td data-label="Códigos de seguimiento">{pedido.TN || pedido["Codigos de seguimiento"]}</td>
                   {tipo !== "seguimientos" ? (
                     <td data-label="¿Pagado?">{pedido["¿Pagado?"]}</td>
                   ) : null}
@@ -329,7 +329,14 @@ Cuando lo tengas, por favor realizá la transferencia:
                 )
                 .map(([clave, valor]) => (
                   <div key={clave}>
-                    <strong>{clave}:</strong> {String(valor || "-")}
+                    <strong>{clave}:</strong>{" "}
+                    {clave === "LINK FINAL CORREO" && valor ? (
+                      <a href={valor} target="_blank" rel="noopener noreferrer">
+                        {valor}
+                      </a>
+                    ) : (
+                      String(valor || "-")
+                    )}
                   </div>
                 ))}
             </div>
