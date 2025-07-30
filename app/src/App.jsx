@@ -92,7 +92,7 @@ function App() {
 
     try {
       const response = await fetch(
-        "https://f55a13b25b36.ngrok-free.app/api/excel/consultar-envios",
+        "http://localhost:3001/api/excel/consultar-envios",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -105,14 +105,32 @@ function App() {
       const data = await response.json();
       setIsLocal(false);
 
-      const { consultados, perdidos, noPagados } = data;
+      const { consultados, perdidos, noPagados, mercadoLibre } = data;
 
-      const sinDistribuidor = consultados.filter(
+      // 🟡 Normalizar los pedidos de Mercado Libre
+      mercadoLibre.forEach((pedido) => {
+        const estado = (pedido["Estado actual"] || "").toUpperCase().trim();
+        const fecha = (pedido.fechaEntrega || "").toLowerCase().trim();
+
+        if (fecha.includes("llega hoy")) {
+          pedido["Estado actual"] = "EN PODER DEL DISTRIBUIDOR";
+        }
+
+        if (estado === "ENTREGADO" || fecha.includes("entregado")) {
+          pedido["Estado actual"] = "ENTREGADO";
+        }
+      });
+
+      // 🟢 Unificamos todos los pedidos en uno solo
+      const todosLosPedidos = [...consultados, ...mercadoLibre];
+
+      // 🔵 Clasificación
+      const sinDistribuidor = todosLosPedidos.filter(
         (item) =>
           item["Estado actual"]?.toLowerCase() !== "en poder del distribuidor"
       );
 
-      const distribuidor = consultados.filter(
+      const distribuidor = todosLosPedidos.filter(
         (item) =>
           item["Estado actual"]?.toLowerCase() === "en poder del distribuidor"
       );
@@ -123,9 +141,10 @@ function App() {
           item["Estado actual"] === "ENTREGADO" ||
           item["Estado actual"] === "EN ESPERA EN SUCURSAL"
       );
+
       const importanciaOrden = { Importante: 1, Moderado: 2, Bajo: 3 };
 
-      // Normalizar IMPORTANCIA
+      // Normalizar IMPORTANCIA en completados
       resultadosCompletos.forEach((p) => {
         const raw = (p.IMPORTANCIA || p.Importancia || "").toLowerCase().trim();
         if (raw.includes("importante")) {
@@ -144,32 +163,22 @@ function App() {
       });
 
       setResultados(resultadosCompletos);
-
       localStorage.setItem("resultados", JSON.stringify(resultadosCompletos));
 
-      setResultadosRestantes(
-        sinDistribuidor.filter(
-          (item) =>
-            item["Estado actual"] !== "ENTREGA EN SUCURSAL" &&
-            item["Estado actual"] !== "ENTREGADO" &&
-            item["Estado actual"] !== "EN ESPERA EN SUCURSAL"
-        )
+      const restantes = sinDistribuidor.filter(
+        (item) =>
+          item["Estado actual"] !== "ENTREGA EN SUCURSAL" &&
+          item["Estado actual"] !== "ENTREGADO" &&
+          item["Estado actual"] !== "EN ESPERA EN SUCURSAL"
       );
-      localStorage.setItem(
-        "resultadosRestantes",
-        JSON.stringify(
-          sinDistribuidor.filter(
-            (item) =>
-              item["Estado actual"] !== "ENTREGA EN SUCURSAL" &&
-              item["Estado actual"] !== "ENTREGADO" &&
-              item["Estado actual"] !== "EN ESPERA EN SUCURSAL"
-          )
-        )
-      );
+
+      setResultadosRestantes(restantes);
+      localStorage.setItem("resultadosRestantes", JSON.stringify(restantes));
 
       setEnDistribuidor(distribuidor);
       localStorage.setItem("enDistribuidor", JSON.stringify(distribuidor));
 
+      // No pagados
       const importanciaOrdenNoPagados = { Importante: 1, Moderado: 2, Bajo: 3 };
 
       noPagados.forEach((p) => {
@@ -186,7 +195,6 @@ function App() {
       noPagados.sort((a, b) => {
         const impA = a.Importancia || "Bajo";
         const impB = b.Importancia || "Bajo";
-
         return (
           (importanciaOrdenNoPagados[impA] || 4) -
           (importanciaOrdenNoPagados[impB] || 4)
