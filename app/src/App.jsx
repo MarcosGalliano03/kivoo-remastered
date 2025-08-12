@@ -225,7 +225,6 @@ function App() {
     nuevoStatus = null,
     nuevaImportancia = null,
   }) => {
-    console.log("CAMBIO DE IMPORTANCIA =>", id, nuevaImportancia);
 
     const actualizarEnArray = (array, setArray) => {
       const nuevoArray = array.map((item) => {
@@ -266,6 +265,9 @@ function App() {
       encontrado = true;
     } else if (enDistribuidor.some((item) => item["ID Pedido"] === id)) {
       actualizarEnArray(enDistribuidor, setEnDistribuidor);
+      encontrado = true;
+    } else if (resultadosRestantes.some((item) => item["ID Pedido"] === id)) {
+      actualizarEnArray(resultadosRestantes, setResultadosRestantes);
       encontrado = true;
     }
 
