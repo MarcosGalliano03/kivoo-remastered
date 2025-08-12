@@ -1,6 +1,7 @@
 import React from "react";
 import "./tablas.css";
 import { useState } from "react";
+import MLlogo from "../assets/ML.png";
 
 const TablaPedidos = ({
   pedidos,
@@ -154,11 +155,14 @@ Cuando lo tengas, por favor realizá la transferencia:
                   className={
                     atendidos[pedido["ID Pedido"]] ? "fila-atendida" : ""
                   }
-                  style={
-                    atendidos[pedido["ID Pedido"]]
+                  style={{
+                    ...(atendidos[pedido["ID Pedido"]]
                       ? { background: "#006a00" }
-                      : {}
-                  }
+                      : {}),
+                    ...(pedido["Mercado Libre"] === "Si"
+                      ? { color: "#fff9c3ff" }
+                      : {}),
+                  }}
                 >
                   <td
                     data-label="Atendido"
@@ -167,13 +171,21 @@ Cuando lo tengas, por favor realizá la transferencia:
                     <input
                       type="checkbox"
                       checked={!!atendidos[pedido["ID Pedido"]]}
-                      onChange={() => handleCheck(pedido["ID Pedido"])}
                     />
+                    {pedido["Mercado Libre"] === "Si" ? (
+                      <img
+                        src={MLlogo}
+                        alt="Mercado Libre"
+                        style={{ width: "50px" }}
+                      />
+                    ) : null}
                   </td>
                   <td data-label="ID Pedido">{pedido["ID Pedido"]}</td>
                   <td data-label="Cliente">{pedido.Cliente}</td>
                   <td data-label="Monto">${pedido.Monto}</td>
-                  <td data-label="Códigos de seguimiento">{pedido.TN || pedido["Codigos de seguimiento"]}</td>
+                  <td data-label="Códigos de seguimiento">
+                    {pedido.TN || pedido["Codigos de seguimiento"]}
+                  </td>
                   {tipo !== "seguimientos" ? (
                     <td data-label="¿Pagado?">{pedido["¿Pagado?"]}</td>
                   ) : null}
