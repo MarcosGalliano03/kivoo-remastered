@@ -144,7 +144,7 @@ Cuando lo tengas, por favor realizá la transferencia:
 
               const urlWhatsapp =
                 pedido.Whatsapp && mensaje
-                  ? `https://api.whatsapp.com/send/?phone=${
+                  ? `https://web.whatsapp.com/send/?phone=${
                       pedido.Whatsapp
                     }&text=${encodeURIComponent(mensaje)}`
                   : null;
