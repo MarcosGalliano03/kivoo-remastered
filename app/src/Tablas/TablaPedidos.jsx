@@ -1,6 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
 import "./tablas.css";
-import { useState } from "react";
 import MLlogo from "../assets/ML.png";
 
 const TablaPedidos = ({
@@ -12,22 +11,151 @@ const TablaPedidos = ({
   exportar,
   handleTextChange: handleStatusChange,
 }) => {
-  const [display, setDisplay] = useState(false);
   const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
+  // NUEVO: menú de selección de mensaje por fila
+  const [menuAbiertoId, setMenuAbiertoId] = useState(null);
 
   const calcularDiasDesde = (fechaTexto) => {
     if (!fechaTexto) return null;
-
     const [dia, mes, anioHora] = fechaTexto.split("-");
-    const [anio, hora] = anioHora.split(" ");
+    const [anio, hora] = (anioHora || "").split(" ");
     const fechaEstado = new Date(`${anio}-${mes}-${dia}T${hora || "00:00"}`);
-
     const hoy = new Date();
     const diferenciaMs = hoy - fechaEstado;
-
     const dias = Math.floor(diferenciaMs / (1000 * 60 * 60 * 24));
-
     return dias >= 0 ? dias : null;
+  };
+
+  const normalizar = (s) => (s || "").toString().trim().toUpperCase();
+
+  // NUEVO: generador de textos según plantilla
+  const generarMensaje = (plantilla, pedido) => {
+    const estado = normalizar(pedido["Estado actual"]);
+    const monto = pedido.Monto || "";
+    const cliente = pedido.Cliente || "";
+
+    const headerPago = `Por favor realizá la transferencia:\n\n📌 *Si transferís desde una cuenta bancaria* (Santander, Galicia, Cuenta DNI, etc):  \n👉🏻 *CVU:* 0720126088000003241736\n👉🏻  *Alias*: juanescobar9\n\n📌 *Si transferís desde Mercado Pago* :  \n👉🏻 *CVU:* 0340290208290120476005\n👉🏻 *Alias*: kivoo.patagonia\n👉🏻 *Titular*: Leonardo Gabriel\n\n💵 El importe total es de *$${monto}*`;
+
+    switch (plantilla) {
+      case "recordatorio_pago":
+        return `Hola ${cliente}, ¿cómo estás? Te escribo de Kivoo para recordarte que todavía está pendiente la transferencia del pedido 💸.\n\n${headerPago}\n\n*Después enviame el comprobante por favor 🧾*`;
+
+      case "entregado":
+        return `Hola ${cliente}, te habla Ezequiel de Kivoo 😊 Me acaban de decir los chicos de correo que ya te entregaron el paquete 🙏🏻 \n\n${headerPago}\n\n*Después enviame el comprobante por favor 🧾*`;
+
+      case "en_espera_en_sucursal":
+        return `Sucursal 🏤 ¡Hola ${cliente}! Te habla Ezequiel de Kivoo 😊 Tu pedido ya está esperando para ser retirado en una sucursal. En un ratito te vamos a avisar exactamente cuál es la sucursal 📍. Tenés 3 días para ir a buscarlo, ¡gracias por tu compra! 🙌`;
+
+      case "en_poder_del_distribuidor":
+        return `Hola ${cliente}, te habla Ezequiel de Kivoo 😊 ¿Cómo estás? Te quería decir que *hoy mismo* vas a estar recibiendo tu pedido en tu domicilio.\n\n${headerPago}\n\n*Por favor recordá que al chico de Correo Argentino no hay que pagarle nada*`;
+
+      case "sin_texto":
+        return ""; // Abrir WhatsApp sin texto
+
+      default:
+        // fallback: si hay estado, sugerimos una por defecto según estado
+        if (estado === "ENTREGADO" || estado === "ENTREGA EN SUCURSAL") {
+          return generarMensaje("entregado", pedido);
+        }
+        if (estado === "EN ESPERA EN SUCURSAL") {
+          return generarMensaje("en_espera_en_sucursal", pedido);
+        }
+        if (estado === "EN PODER DEL DISTRIBUIDOR") {
+          return generarMensaje("en_poder_del_distribuidor", pedido);
+        }
+        return generarMensaje("recordatorio_pago", pedido);
+    }
+  };
+
+  // NUEVO: opciones visibles en el menú según contexto
+  const obtenerOpcionesMensajes = (pedido, tipo) => {
+    const estado = normalizar(pedido["Estado actual"]);
+
+    // Ordenamos sugerencias según "tipo" y "estado"
+    const base = [
+      { key: "recordatorio_pago", label: "Recordatorio de pago" },
+      { key: "entregado", label: "Entregado (pedir transferencia)" },
+      { key: "en_espera_en_sucursal", label: "En espera en sucursal" },
+      {
+        key: "en_poder_del_distribuidor",
+        label: "En poder del distribuidor (llega hoy)",
+      },
+      { key: "sin_texto", label: "Abrir WhatsApp sin texto" },
+    ];
+
+    if (tipo === "no_pagados") {
+      // Priorizar recordatorio
+      return [
+        { key: "recordatorio_pago", label: "Recordatorio de pago" },
+        { key: "entregado", label: "Entregado (pedir transferencia)" },
+        {
+          key: "en_poder_del_distribuidor",
+          label: "En poder del distribuidor (llega hoy)",
+        },
+        { key: "en_espera_en_sucursal", label: "En espera en sucursal" },
+        { key: "sin_texto", label: "Abrir WhatsApp sin texto" },
+      ];
+    }
+
+    if (estado === "ENTREGADO" || estado === "ENTREGA EN SUCURSAL") {
+      return [
+        { key: "entregado", label: "Entregado (pedir transferencia)" },
+        { key: "recordatorio_pago", label: "Recordatorio de pago" },
+        {
+          key: "en_poder_del_distribuidor",
+          label: "En poder del distribuidor (llega hoy)",
+        },
+        { key: "en_espera_en_sucursal", label: "En espera en sucursal" },
+        { key: "sin_texto", label: "Abrir WhatsApp sin texto" },
+      ];
+    }
+
+    if (estado === "EN ESPERA EN SUCURSAL") {
+      return [
+        { key: "en_espera_en_sucursal", label: "En espera en sucursal" },
+        { key: "entregado", label: "Entregado (pedir transferencia)" },
+        { key: "recordatorio_pago", label: "Recordatorio de pago" },
+        {
+          key: "en_poder_del_distribuidor",
+          label: "En poder del distribuidor (llega hoy)",
+        },
+        { key: "sin_texto", label: "Abrir WhatsApp sin texto" },
+      ];
+    }
+
+    if (estado === "EN PODER DEL DISTRIBUIDOR") {
+      return [
+        {
+          key: "en_poder_del_distribuidor",
+          label: "En poder del distribuidor (llega hoy)",
+        },
+        { key: "entregado", label: "Entregado (pedir transferencia)" },
+        { key: "recordatorio_pago", label: "Recordatorio de pago" },
+        { key: "en_espera_en_sucursal", label: "En espera en sucursal" },
+        { key: "sin_texto", label: "Abrir WhatsApp sin texto" },
+      ];
+    }
+
+    return base;
+  };
+
+  // NUEVO: abrir WhatsApp Web con la plantilla elegida
+  const enviarMensaje = (pedido, plantillaKey) => {
+    const texto = generarMensaje(plantillaKey, pedido);
+    const phone = (pedido.Whatsapp || "").toString().replace(/[^\d]/g, "");
+    if (!phone) return;
+
+    const url = `https://web.whatsapp.com/send/?phone=${phone}${
+      texto ? `&text=${encodeURIComponent(texto)}` : ""
+    }`;
+
+    window.open(url, "_blank", "noopener,noreferrer");
+    setMenuAbiertoId(null);
+  };
+
+  // NUEVO: toggle del menú por fila
+  const toggleMenu = (idPedido) => {
+    setMenuAbiertoId((prev) => (prev === idPedido ? null : idPedido));
   };
 
   return (
@@ -98,79 +226,27 @@ const TablaPedidos = ({
 
           <tbody>
             {pedidos.map((pedido, index) => {
-              const mensaje =
-                tipo === "no_pagados"
-                  ? `Hola ${pedido.Cliente}, ¿cómo estás? Te escribo de Kivoo para recordarte que todavía está pendiente la transferencia del pedido de buzos 💸. Quedamos atentos a la confirmación. Gracias.`
-                  : pedido["Estado actual"]?.toUpperCase() === "ENTREGADO" ||
-                    (pedido["Estado actual"]?.toUpperCase() ===
-                      "ENTREGA EN SUCURSAL" &&
-                      pedido.Whatsapp)
-                  ? `Hola ${pedido.Cliente}, te habla Ezequiel de Kivoo 😊 Me acaban de decir los chicos de correo que ya te entregaron el paquete 🙏🏻 
-
-Por favor realizá la transferencia:
-
-📌 *Si transferís desde una cuenta bancaria* (Santander, Galicia, Cuenta DNI, etc):  
-👉🏻 *CVU:* 0720126088000003241736
-👉🏻  *Alias*: juanescobar9
-
-📌 *Si transferís desde Mercado Pago* :  
-👉🏻 *CVU:* 0340290208290120476005
-👉🏻 *Alias*: kivoo.patagonia
-👉🏻 *Titular*: Leonardo Gabriel
-
-💵 El importe total es de *$${pedido.Monto}*  
-*Después enviame el comprobante por favor 🧾*`
-                  : pedido["Estado actual"]?.toUpperCase() ===
-                    "EN ESPERA EN SUCURSAL"
-                  ? `Sucursal 🏤 ¡Hola ${pedido.Cliente}! Te habla Ezequiel de Kivoo 😊 Tu pedido ya está esperando para ser retirado en una sucursal. En un ratito te vamos a avisar exactamente cuál es la sucursal 📍. Tenés 3 días para ir a buscarlo, ¡gracias por tu compra! 🙌`
-                  : pedido["Estado actual"]?.toUpperCase() ===
-                    "EN PODER DEL DISTRIBUIDOR"
-                  ? `Hola ${pedido.Cliente}, te habla Ezequiel de Kivoo 😊 ¿Cómo estás? Te quería decir que hoy mismo vas a estar recibiendo tu pedido en tu domicilio.
-
-Cuando lo tengas, por favor realizá la transferencia:
-
-📌 *Si transferís desde una cuenta bancaria* (Santander, Galicia, Cuenta DNI, etc):  
-👉🏻 *CVU:* 0720126088000003241736
-👉🏻  *Alias*: juanescobar9
-
-📌 *Si transferís desde Mercado Pago*:  
-👉🏻 *CVU:* 0340290208290120476005
-👉🏻 *Alias*: kivoo.patagonia
-👉🏻 *Titular*: Leonardo Gabriel
-
-💵 El importe total es de *$${pedido.Monto}*  
-*Por favor recordá que al chico de Correo Argentino no hay que pagarle nada*`
-                  : "";
-
-              const urlWhatsapp =
-                pedido.Whatsapp && mensaje
-                  ? `https://web.whatsapp.com/send/?phone=${
-                      pedido.Whatsapp
-                    }&text=${encodeURIComponent(mensaje)}`
-                  : null;
-
+              const idPedido = pedido["ID Pedido"];
               return (
                 <tr
                   key={index}
-                  className={
-                    atendidos[pedido["ID Pedido"]] ? "fila-atendida" : ""
-                  }
+                  className={atendidos[idPedido] ? "fila-atendida" : ""}
                   style={{
-                    ...(atendidos[pedido["ID Pedido"]]
-                      ? { background: "#006a00" }
-                      : {}),
+                    ...(atendidos[idPedido] ? { background: "#006a00" } : {}),
                     ...(pedido["Mercado Libre"] === "Si"
                       ? { color: "#fff9c3ff" }
                       : {}),
+                    position: "relative", // para posicionar el menú si querés hacerlo absoluto
                   }}
                 >
                   <td
                     data-label="Atendido"
-                    onClick={() => handleCheck(pedido["ID Pedido"])}
+                    onClick={() => handleCheck(idPedido)}
                   >
                     <input
                       type="checkbox"
-                      checked={!!atendidos[pedido["ID Pedido"]]}
+                      checked={!!atendidos[idPedido]}
+                      readOnly
                     />
                     {pedido["Mercado Libre"] === "Si" ? (
                       <img
@@ -180,7 +256,7 @@ Cuando lo tengas, por favor realizá la transferencia:
                       />
                     ) : null}
                   </td>
-                  <td data-label="ID Pedido">{pedido["ID Pedido"]}</td>
+                  <td data-label="ID Pedido">{idPedido}</td>
                   <td data-label="Cliente">{pedido.Cliente}</td>
                   <td data-label="Monto">${pedido.Monto}</td>
                   <td data-label="Códigos de seguimiento">
@@ -228,6 +304,7 @@ Cuando lo tengas, por favor realizá la transferencia:
                   </td>
 
                   <td data-label="Whatsapp">{pedido.Whatsapp}</td>
+
                   <td data-label="Status">
                     <textarea
                       rows="2"
@@ -237,12 +314,13 @@ Cuando lo tengas, por favor realizá la transferencia:
                       }
                       onChange={(e) =>
                         handleStatusChange({
-                          id: pedido["ID Pedido"],
+                          id: idPedido,
                           nuevoStatus: e.target.value,
                         })
                       }
                     />
                   </td>
+
                   <td data-label="Importancia">
                     {tipo === "seguimientos" || tipo === "no_pagados"
                       ? (() => {
@@ -258,6 +336,7 @@ Cuando lo tengas, por favor realizá la transferencia:
                             borderColor = "green";
                           else if (importanciaValue === "Moderado")
                             borderColor = "orange";
+
                           return (
                             <select
                               value={
@@ -268,13 +347,8 @@ Cuando lo tengas, por favor realizá la transferencia:
                                   : "Moderado"
                               }
                               onChange={(e) => {
-                                const id = pedido["ID Pedido"]
-                                  ?.toString()
-                                  .trim();
-                                const nueva = e.target.value;
-
                                 handleStatusChange({
-                                  id: pedido["ID Pedido"],
+                                  id: idPedido,
                                   nuevaImportancia: e.target.value,
                                 });
                               }}
@@ -291,19 +365,50 @@ Cuando lo tengas, por favor realizá la transferencia:
                         })()
                       : null}
                   </td>
-                  <td data-label="Acción">
-                    {urlWhatsapp ? (
-                      <a href={urlWhatsapp} target="_blank" rel="noreferrer">
-                        <button>
-                          <ion-icon name="send"></ion-icon>
-                        </button>
-                      </a>
-                    ) : (
-                      "-"
-                    )}
-                    <button onClick={() => setPedidoSeleccionado(pedido)}>
+
+                  <td data-label="Acción" style={{ whiteSpace: "nowrap" }}>
+                    {/* NUEVO: botón que abre menú de plantillas */}
+                    <button
+                      onClick={() => toggleMenu(idPedido)}
+                      disabled={!pedido.Whatsapp}
+                      title={
+                        pedido.Whatsapp ? "Enviar mensaje" : "Sin WhatsApp"
+                      }
+                    >
+                      <ion-icon name="send"></ion-icon>
+                    </button>
+
+                    {/* Info existente */}
+                    <button
+                      onClick={() => setPedidoSeleccionado(pedido)}
+                      title="Ver detalles"
+                    >
                       <ion-icon name="information-circle-outline"></ion-icon>
                     </button>
+
+                    {/* NUEVO: menú de plantillas */}
+                    {menuAbiertoId === idPedido && (
+                      <div className="mensaje-menu">
+                        <button
+                          onClick={() => toggleMenu(idPedido)}
+                          className="closeBtn"
+                        >
+                          X
+                        </button>
+                        {obtenerOpcionesMensajes(pedido, tipo).map((opt) => (
+                          <button
+                            key={opt.key}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              enviarMensaje(pedido, opt.key);
+                            }}
+                            className="mensaje-menu-item"
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </td>
                 </tr>
               );
@@ -311,6 +416,7 @@ Cuando lo tengas, por favor realizá la transferencia:
           </tbody>
         </table>
       </div>
+
       {pedidoSeleccionado && (
         <div className="modal">
           <div className="modal-contenido">

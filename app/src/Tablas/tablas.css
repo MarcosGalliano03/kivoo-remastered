@@ -57,7 +57,7 @@
 }
 
 /*  modal  */
-.modal{
+.modal {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -68,20 +68,42 @@
     max-height: 700px;
 }
 
-.modal button{
+.modal button {
     width: 40%;
     padding: 0px;
 }
 
-.modal-contenido{
+.modal-contenido {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     padding: 10px 25px;
 }
 
-.pedido-detalles{
+.pedido-detalles {
     display: flex;
     flex-wrap: wrap;
     gap: 30px;
+}
+
+/* MENSAJES */
+.mensaje-menu {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    width: 30%;
+    flex-wrap: wrap;
+    background-color: rgb(66, 66, 66);
+    z-index: 99999;
+    border-radius: 5px;
+    padding: 20px;
+    gap: 15px;
+}
+
+.closeBtn{
+    width: 10%;
+    text-align: center;
 }
