@@ -72,7 +72,7 @@ function App() {
 
     try {
       const response = await fetch(
-        "https://520895a3a076.ngrok-free.app/api/excel/update-retornados",
+        "http://localhost:3001/api/excel/update-retornados",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -92,7 +92,7 @@ function App() {
 
     try {
       const response = await fetch(
-        "https://520895a3a076.ngrok-free.app/api/excel/consultar-envios",
+        "http://localhost:3001/api/excel/consultar-envios",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -105,24 +105,10 @@ function App() {
       const data = await response.json();
       setIsLocal(false);
 
-      const { consultados, perdidos, noPagados, mercadoLibre } = data;
-
-      // 🟡 Normalizar los pedidos de Mercado Libre
-      mercadoLibre.forEach((pedido) => {
-        const estado = (pedido["Estado actual"] || "").toUpperCase().trim();
-        const fecha = (pedido.fechaEntrega || "").toLowerCase().trim();
-
-        if (fecha.includes("llega hoy")) {
-          pedido["Estado actual"] = "EN PODER DEL DISTRIBUIDOR";
-        }
-
-        if (estado === "ENTREGADO" || fecha.includes("entregado")) {
-          pedido["Estado actual"] = "ENTREGADO";
-        }
-      });
+      const { consultados, perdidos, noPagados } = data;
 
       // 🟢 Unificamos todos los pedidos en uno solo
-      const todosLosPedidos = [...consultados, ...mercadoLibre];
+      const todosLosPedidos = [...consultados];
 
       // 🔵 Clasificación
       const sinDistribuidor = todosLosPedidos.filter(
@@ -296,7 +282,7 @@ function App() {
     try {
       setLoading2(true);
       const response = await fetch(
-        "https://520895a3a076.ngrok-free.app/api/excel/update-status",
+        "http://localhost:3001/api/excel/update-status",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
